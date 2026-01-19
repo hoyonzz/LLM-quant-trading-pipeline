@@ -1,68 +1,80 @@
-# 📈 LLM-Driven Investment Strategy Pipeline
+# 📈 LLM-Quant Strategy Pipeline (LQSP)
 
-> **AI 리서치와 실시간 금융 데이터를 결합한 지능형 투자 전략 수립 및 자동화 시스템**
+> **"지능형 에이전트 기반의 데이터 통합 및 투자 전략 수립 자동화 파이프라인"**
 
-본 프로젝트는 불확실성이 높은 주식 시장에서 **LLM(Large Language Model)**의 추론 능력과 **증권사 REST API**의 정밀 데이터를 결합하여, 감정에 휘둘리지 않는 객감적인 투자 전략을 수립하고 모니터링하는 백엔드 파이프라인입니다.
-
----
-
-## 🏗 System Architecture
-
-본 시스템은 데이터의 신뢰성을 확보하고 LLM의 환각(Hallucination)을 제어하기 위해 **Multi-Agent 구조**를 지향합니다.
-
-1.  **Data Layer**: 
-    *   **KIS(한국투자증권) API**: 실시간 시세, 수급(외인/기관), 이동평균선 등 정량 데이터 추출.
-    *   **Perplexity AI**: 글로벌 거시 경제 지표 및 종목별 임상/이슈 등 정성 데이터 수집.
-2.  **Processing Layer (Gemini 2.0 Flash)**: 
-    *   이종 데이터(JSON, Text)를 정규화하고 전략 수립에 최적화된 Context로 변환.
-3.  **Strategy Layer (Gemini 1.5 Pro)**: 
-    *   사전에 정의된 **Risk Management Protocol**에 따라 최종 매매 시나리오 산출.
-4.  **Delivery Layer (Discord)**: 
-    *   Webhook을 통한 실시간 전략 보고서 및 변동성 알림 전송.
+본 프로젝트는 불확실성이 높은 금융 시장에서 개인 투자자의 감정적 편향을 배제하고, **LLM(Gemini 1.5 Pro)의 전략적 추론**과 **증권사 REST API의 정량 데이터**를 결합하여 수익을 창출하는 **Semi-Auto Trading 인프라**를 구축합니다.
 
 ---
 
-## 🛠 Tech Stack & Tools
+## 🏗 1. System Architecture
 
+본 시스템은 정성적 데이터(뉴스/리포트)와 정량적 데이터(시세/수급)를 상호 보완적으로 결합하는 **Decoupled Data Pipeline** 구조를 채택하였습니다.
+
+### **[Data Flow]**
+1.  **Research**: Perplexity Pro (Web) → Email Automation → **Gmail API/GAS** → **Google Sheets** (Data Lake).
+2.  **Market Data**: **KIS REST API** (실시간 시세, 수급, 이평선) → Python Backend.
+3.  **Core Engine**:
+    *   **Gemini 2.0 Flash**: 이종 데이터 병합 및 데이터 정규화 (Context Builder).
+    *   **Gemini 1.5 Pro**: 리스크 관리 프로토콜에 따른 최종 투자 전략 수립 (Strategist).
+4.  **Communication**: **Discord Webhook**을 통한 인터랙티브 매매 시나리오 전송.
+
+---
+
+## 🛠 2. Tech Stack & Tools
+
+### **Backend & APIs**
 - **Language**: Python 3.10+
-- **Finance API**: KIS Developers (REST API, OAuth 2.0)
-- **AI Models**: Gemini 1.5 Pro / 2.0 Flash, Perplexity API
-- **Communication**: Discord Webhook
-- **DevOps**: Environment Variable Management (dotenv), GitHub Actions (Scheduled Task)
+- **Finance API**: 한국투자증권 KIS Developers (REST API, OAuth 2.0)
+- **AI Models**: Gemini 1.5 Pro (Strategy), Gemini 2.0 Flash (Processing)
+- **Research**: Perplexity Pro (Web-based Research)
+
+### **Infrastructure & DevOps**
+- **Automation**: **GitHub Actions** (Scheduled Task Runner)
+- **Data Bridge**: **Google Apps Script (GAS)** (Email-to-Sheet ETL)
+- **Database**: **Google Sheets** (Lightweight Data Lake)
+- **Secret Management**: Python-dotenv (.env)
+
+### **Communication**
+- **Notification**: **Discord Webhook** (시각화된 전략 보고서 전송)
 
 ---
 
-## 🔥 Key Challenges & Solutions (Senior's Perspective)
+## 🔥 3. Engineering Challenges & Solutions
 
-### 1. LLM 환각 현상 및 데이터 신뢰성 확보
-*   **Problem**: LLM이 잘못된 주가나 수치를 생성하여 의사결정에 치명적인 오류를 범할 위험이 있음.
-*   **Solution**: 모든 수치 데이터는 증권사 API를 통해 수집된 데이터만 사용하도록 프롬프트를 설계하고, LLM은 '분석'과 '판단'의 역할만 수행하도록 역할을 분리(Decoupling).
+### ✅ **Challenge 1: 이종 데이터의 통합 및 환각(Hallucination) 제어**
+*   **Problem**: Perplexity의 뉴스 데이터(비정형)와 KIS API의 수치 데이터(정형)를 결합할 때, LLM이 수치를 왜곡하거나 잘못된 근거를 생성할 위험이 있음.
+*   **Solution**: **'Two-Step Prompting'** 전략 도입. 
+    1. **Gemini 2.0 Flash**가 수치 데이터를 검증 및 마크다운 테이블로 규격화.
+    2. **Gemini 1.5 Pro**는 규격화된 데이터만을 참조하여 전략을 수립하도록 제약을 설정하여 데이터 무결성 확보.
 
-### 2. 효율적인 API 인증 처리 및 Rate Limit 대응
-*   **Problem**: 증권사 API의 접근 토큰(Access Token) 만료 및 초당 호출 제한 문제.
-*   **Solution**: 토큰 갱신 로직을 자동화하고, 데이터 요청 간의 딜레이를 관리하는 스케줄러를 도입하여 시스템 안정성 확보.
+### ✅ **Challenge 2: API 비용 최적화 및 서버리스 파이프라인 구축**
+*   **Problem**: 24시간 서버를 가동하거나 유료 AI API(Perplexity API)를 상시 호출하는 것은 비용 효율성이 낮음.
+*   **Solution**: **GAS(Google Apps Script)**를 활용해 Perplexity의 무료 이메일 보고서를 파싱하고 Google Sheets에 적재하는 **Zero-Cost ETL** 프로세스 구축. 이후 **GitHub Actions**의 크론(Cron) 기능을 사용하여 서버 비용 없이 특정 시간(장전/장후)에만 파이프라인이 구동되도록 설계.
 
-### 3. 리스크 관리 프로토콜 구현
-*   **Approach**: 단순 익절/손절가를 넘어, 시장 변동성(VIX)과 파트너사(IMVT 등)의 동향을 반영한 가변적 리스크 관리 로직을 파이프라인에 이식.
-
----
-
-## 📋 Roadmap & Progress
-
-- [ ] **Phase 1: Infra Setup**
-    - [ ] 한국투자증권 API 연동 및 OAuth2 인증 모듈 개발
-    - [ ] Discord Webhook 연동 및 포맷팅 엔진 구축
-- [ ] **Phase 2: Data Pipeline**
-    - [ ] Perplexity 기반 실시간 뉴스 스캐너 구현
-    - [ ] 시세/수급 데이터 전처리 파이프라인 구축
-- [ ] **Phase 3: Strategy Engine**
-    - [ ] Gemini 1.5 Pro 기반 투자 전략 프롬프트 엔지니어링
-    - [ ] 백테스팅 시뮬레이션 환경 구축
-- [ ] **Phase 4: Optimization**
-    - [ ] GitHub Actions를 이용한 파이프라인 자동화 실행
-    - [ ] 다중 종목 확장성 테스트
+### ✅ **Challenge 3: 안정적인 API 인증 및 Rate Limit 관리**
+*   **Problem**: 증권사 API의 OAuth 2.0 토큰은 24시간 후 만료되며, 초당 요청 제한(Rate Limit) 존재.
+*   **Solution**: `auth.py` 모듈 내에 **토큰 캐싱 및 자동 갱신 로직**을 구현하고, API 호출 간 `time.sleep`을 동적으로 관리하는 **Request Scheduler**를 도입하여 시스템 중단 방지.
 
 ---
 
-## 👨‍💻 Developer's Note
-이 프로젝트는 기술적 구현을 넘어 **'데이터가 어떻게 비즈니스적 가치(Profit)를 창출하는가'**에 대한 고찰을 담고 있습니다. 모든 코드는 유지보수성과 확장성을 고려하여 클린 코드 원칙을 준수하고자 노력했습니다.
+## 📋 4. Roadmap & Progress
+
+- [ ] **Phase 1: Foundation Setup**
+    - [ ] 한국투자증권 API OAuth2 인증 및 토큰 관리 모듈 (`auth.py`) 개발
+    - [ ] Discord Webhook 포맷팅 엔진 구축
+- [ ] **Phase 2: Data Pipe-lining**
+    - [ ] GAS 기반 Gmail 뉴스 데이터 파싱 및 Google Sheets 적재 자동화
+    - [ ] KIS API 기반 기술적 지표(이평선, 수급) 추출 스크립트 완성
+- [ ] **Phase 3: Intelligence Layer**
+    - [ ] Gemini 1.5 Pro 기반 투자 전략 프롬프트 엔지니어링 (Risk Management 포함)
+    - [ ] 데이터 정규화 모듈 (Flash 모델 활용) 구축
+- [ ] **Phase 4: Deployment**
+    - [ ] GitHub Actions를 이용한 전체 파이프라인 스케줄링 완료
+    - [ ] 트레이딩 로그 기록 및 전략 복기 시스템 구축
+
+---
+
+## 👨‍💻 5. Developer's Note
+본 프로젝트는 백엔드 개발자로서 **"데이터의 수집-정제-가공-전달"**이라는 전체 생명 주기를 어떻게 효율적으로 관리할 것인가에 대한 고민을 담고 있습니다. 특히, 최신 LLM 기술을 비즈니스 로직(투자)에 안정적으로 통합하기 위한 **아키텍처 설계 역량**을 중점적으로 다루었습니다.
+
+---
