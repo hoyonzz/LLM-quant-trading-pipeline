@@ -6,7 +6,7 @@
 
 ---
 
-## 🏗 1. System Architecture
+## 🏛 1. System Architecture
 
 본 시스템은 정성적 데이터(뉴스/리포트)와 정량적 데이터(시세/수급)를 상호 보완적으로 결합하는 **Decoupled Data Pipeline** 구조를 채택하였습니다.
 
@@ -16,7 +16,7 @@
 3.  **Core Engine**:
     *   **Gemini 2.0 Flash**: 이종 데이터 병합 및 데이터 정규화 (Context Builder).
     *   **Gemini 1.5 Pro**: 리스크 관리 프로토콜에 따른 최종 투자 전략 수립 (Strategist).
-4.  **Communication**: **Discord Webhook**을 통한 인터랙티브 매매 시나리오 전송.
+4.  **Communication**: **Discord Webhook/Bot**을 통한 인터랙티브 매매 시나리오 전송.
 
 ---
 
@@ -24,7 +24,7 @@
 
 ### **Backend & APIs**
 - **Language**: Python 3.10+
-- **Finance API**: 한국투자증권 KIS Developers (REST API, OAuth 2.0)
+- **Finance API**: 한국투자증권 KIS Developers (REST API, WebSocket, OAuth 2.0)
 - **AI Models**: Gemini 1.5 Pro (Strategy), Gemini 2.0 Flash (Processing)
 - **Research**: Perplexity Pro (Web-based Research)
 
@@ -32,49 +32,47 @@
 - **Automation**: **GitHub Actions** (Scheduled Task Runner)
 - **Data Bridge**: **Google Apps Script (GAS)** (Email-to-Sheet ETL)
 - **Database**: **Google Sheets** (Lightweight Data Lake)
-- **Secret Management**: Python-dotenv (.env)
-
-### **Communication**
-- **Notification**: **Discord Webhook** (시각화된 전략 보고서 전송)
+- **Communication**: **Discord API** (Notification & Interactive Bot)
 
 ---
 
-## 🔥 3. Engineering Challenges & Solutions
+## 📌 3. Project Roadmap & Milestones
 
-### ✅ **Challenge 1: 이종 데이터의 통합 및 환각(Hallucination) 제어**
-*   **Problem**: Perplexity의 뉴스 데이터(비정형)와 KIS API의 수치 데이터(정형)를 결합할 때, LLM이 수치를 왜곡하거나 잘못된 근거를 생성할 위험이 있음.
-*   **Solution**: **'Two-Step Prompting'** 전략 도입. 
-    1. **Gemini 2.0 Flash**가 수치 데이터를 검증 및 마크다운 테이블로 규격화.
-    2. **Gemini 1.5 Pro**는 규격화된 데이터만을 참조하여 전략을 수립하도록 제약을 설정하여 데이터 무결성 확보.
+### 🟢 v0.1.0: Foundation (Current)
+- 프로젝트 인프라 구축 및 보안 설정 (.env, .gitignore).
+- 한국투자증권(KIS) OAuth 2.0 인증 및 토큰 매니저 개발.
+- Discord Webhook 연동 기초.
 
-### ✅ **Challenge 2: API 비용 최적화 및 서버리스 파이프라인 구축**
-*   **Problem**: 24시간 서버를 가동하거나 유료 AI API(Perplexity API)를 상시 호출하는 것은 비용 효율성이 낮음.
-*   **Solution**: **GAS(Google Apps Script)**를 활용해 Perplexity의 무료 이메일 보고서를 파싱하고 Google Sheets에 적재하는 **Zero-Cost ETL** 프로세스 구축. 이후 **GitHub Actions**의 크론(Cron) 기능을 사용하여 서버 비용 없이 특정 시간(장전/장후)에만 파이프라인이 구동되도록 설계.
+### 🟡 v0.2.0: Research ETL Pipeline
+- GAS(Google Apps Script) 기반 Perplexity 리서치 데이터 자동 파싱.
+- Google Sheets API를 활용한 데이터 적재 시스템.
+
+### 🟠 v0.3.0: Intelligence Strategy Engine
+- Gemini 1.5 Pro 기반 투자 시나리오 생성 프롬프트 엔지니어링.
+- KIS REST API 기반 기술적 지표(이평선, RSI 등) 계산 모듈 구축.
+
+### 🔴 v0.4.0: Tactical Real-time Mode
+- **WebSocket 연동**: 실시간 호가 및 체결 데이터 스트리밍 처리.
+- **Interactive Discord Bot**: 실시간 상황에 대한 LLM 즉각 질의응답 기능 추가.
+- **Event-Driven Alert**: 급등락 발생 시 긴급 리스크 관리 전략 자동 전송.
+
+---
+
+## 🔥 4. Engineering Challenges & Solutions
+
+### ✅ **Challenge 1: 이종 데이터 통합 및 환각(Hallucination) 제어**
+*   **Problem**: 비정형 뉴스 데이터와 정형 수치 데이터를 결합할 때 LLM이 수치를 왜곡할 위험성 존재.
+*   **Solution**: **'Two-Step Prompting'** 전략 도입. Gemini 2.0 Flash가 데이터 무결성을 먼저 검증하고, 규격화된 Markdown Context를 생성하여 1.5 Pro의 판단 정밀도 향상.
+
+### ✅ **Challenge 2: 비용 효율적인 서버리스 파이프라인 설계**
+*   **Problem**: 유료 API(Perplexity) 및 고정 서버 비용 발생 부담.
+*   **Solution**: **GAS(Google Apps Script)**와 **GitHub Actions**의 크론(Cron) 기능을 조합하여 인프라 비용 0원의 ETL 및 스케줄링 파이프라인 구축.
 
 ### ✅ **Challenge 3: 안정적인 API 인증 및 Rate Limit 관리**
-*   **Problem**: 증권사 API의 OAuth 2.0 토큰은 24시간 후 만료되며, 초당 요청 제한(Rate Limit) 존재.
-*   **Solution**: `auth.py` 모듈 내에 **토큰 캐싱 및 자동 갱신 로직**을 구현하고, API 호출 간 `time.sleep`을 동적으로 관리하는 **Request Scheduler**를 도입하여 시스템 중단 방지.
-
----
-
-## 📋 4. Roadmap & Progress
-
-- [ ] **Phase 1: Foundation Setup**
-    - [ ] 한국투자증권 API OAuth2 인증 및 토큰 관리 모듈 (`auth.py`) 개발
-    - [ ] Discord Webhook 포맷팅 엔진 구축
-- [ ] **Phase 2: Data Pipe-lining**
-    - [ ] GAS 기반 Gmail 뉴스 데이터 파싱 및 Google Sheets 적재 자동화
-    - [ ] KIS API 기반 기술적 지표(이평선, 수급) 추출 스크립트 완성
-- [ ] **Phase 3: Intelligence Layer**
-    - [ ] Gemini 1.5 Pro 기반 투자 전략 프롬프트 엔지니어링 (Risk Management 포함)
-    - [ ] 데이터 정규화 모듈 (Flash 모델 활용) 구축
-- [ ] **Phase 4: Deployment**
-    - [ ] GitHub Actions를 이용한 전체 파이프라인 스케줄링 완료
-    - [ ] 트레이딩 로그 기록 및 전략 복기 시스템 구축
+*   **Problem**: 24시간 후 만료되는 OAuth 2.0 토큰 및 증권사 API의 초당 호출 제한 대응 필요.
+*   **Solution**: 토큰 자동 갱신 로직 및 요청 간 동적 딜레이를 관리하는 **Request Scheduler** 모듈 구현.
 
 ---
 
 ## 👨‍💻 5. Developer's Note
-본 프로젝트는 백엔드 개발자로서 **"데이터의 수집-정제-가공-전달"**이라는 전체 생명 주기를 어떻게 효율적으로 관리할 것인가에 대한 고민을 담고 있습니다. 특히, 최신 LLM 기술을 비즈니스 로직(투자)에 안정적으로 통합하기 위한 **아키텍처 설계 역량**을 중점적으로 다루었습니다.
-
----
+이 프로젝트는 기술적 구현을 넘어 **'데이터가 어떻게 비즈니스적 가치(Profit)를 창출하는가'**에 대한 고찰을 담고 있습니다. 모든 코드는 유지보수성과 확장성을 고려하여 클린 코드 원칙을 준수합니다.
