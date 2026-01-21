@@ -189,3 +189,6 @@ pip-selfcheck.json
 
 # LQSP Project Specific
 data/
+
+# Google
+google_key.json
