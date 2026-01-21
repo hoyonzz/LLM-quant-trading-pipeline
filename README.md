@@ -8,15 +8,15 @@
 
 ## 🏛 1. System Architecture
 
-본 시스템은 정성적 데이터(뉴스/리포트)와 정량적 데이터(시세/수급)를 상호 보완적으로 결합하는 **Decoupled Data Pipeline** 구조를 채택하였습니다.
+본 시스템은 'AI Captain' 페르소나를 중심으로 정성적 데이터(Macro)와 정량적 데이터(Micro)를 결합하는 **Decoupled Data Pipeline** 구조를 채택하였습니다.
 
 ### **[Data Flow]**
-1.  **Research**: Perplexity Pro (Web) → Email Automation → **Gmail API/GAS** → **Google Sheets** (Data Lake).
-2.  **Market Data**: **KIS REST API** (실시간 시세, 수급, 이평선) → Python Backend.
-3.  **Core Engine**:
-    *   **Gemini 2.0 Flash**: 이종 데이터 병합 및 데이터 정규화 (Context Builder).
-    *   **Gemini 1.5 Pro**: 리스크 관리 프로토콜에 따른 최종 투자 전략 수립 (Strategist).
-4.  **Communication**: **Discord Webhook/Bot**을 통한 인터랙티브 매매 시나리오 전송.
+1.  **Macro Analysis (Qualitative)**: Perplexity Pro → Email Automation → **GAS(Google Apps Script)** → **Google Sheets**.
+2.  **Micro Analysis (Quantitative)**: **KIS REST API** (실시간 시세, 수급, 이평선) → Python Backend.
+3.  **Strategy Engine (AI Captain)**:
+    *   **Gemini 2.0 Flash**: 이종 데이터 전처리 및 데이터 무결성 검증.
+    *   **Gemini 1.5 Pro**: 'AI Captain' 페르소나를 기반으로 최종 투자 전략(Signal, Action Plan) 수립.
+4.  **Delivery**: **Discord Webhook**을 통한 구조화된 **Embed** 메시지 전송.
 
 ---
 
@@ -38,41 +38,50 @@
 
 ## 📌 3. Project Roadmap & Milestones
 
-### 🟢 v0.1.0: Foundation (Current)
-- 프로젝트 인프라 구축 및 보안 설정 (.env, .gitignore).
-- 한국투자증권(KIS) OAuth 2.0 인증 및 토큰 매니저 개발.
-- Discord Webhook 연동 기초.
+### ✅ v0.1.0: Foundation (Completed)
+- [x] 프로젝트 인프라 및 가상환경(venv) 구축.
+- [x] **KIS OAuth 2.0 인증 모듈 (`auth.py`)**: 토큰 캐싱 로직 포함.
+- [x] **Discord 알림 엔진 (`discord_bot.py`)**: Embed 카드 메시지 레이아웃 구현.
+- [x] 보안 설정 완료 (`.env`, `.gitignore` - data/ 폴더 격리).
 
-### 🟡 v0.2.0: Research ETL Pipeline
-- GAS(Google Apps Script) 기반 Perplexity 리서치 데이터 자동 파싱.
-- Google Sheets API를 활용한 데이터 적재 시스템.
+### 🟡 v0.2.0: Research ETL Pipeline (Next)
+- [ ] GAS 기반 Gmail 뉴스 데이터 자동 파싱 및 Google Sheets 적재.
+- [ ] Google Sheets API 연동 모듈 개발.
 
 ### 🟠 v0.3.0: Intelligence Strategy Engine
-- Gemini 1.5 Pro 기반 투자 시나리오 생성 프롬프트 엔지니어링.
-- KIS REST API 기반 기술적 지표(이평선, RSI 등) 계산 모듈 구축.
+- [ ] 'AI Captain' 페르소나 주입 및 프롬프트 엔지니어링 최적화.
+- [ ] KIS API 기반 기술적 지표 추출 모듈 통합.
 
 ### 🔴 v0.4.0: Tactical Real-time Mode
-- **WebSocket 연동**: 실시간 호가 및 체결 데이터 스트리밍 처리.
-- **Interactive Discord Bot**: 실시간 상황에 대한 LLM 즉각 질의응답 기능 추가.
-- **Event-Driven Alert**: 급등락 발생 시 긴급 리스크 관리 전략 자동 전송.
+- [ ] **Async/WebSocket** 기반 실시간 데이터 스트리밍.
+- [ ] **Interactive Discord Bot**: AI Captain과의 양방향 실시간 전략 대화 기능.
 
 ---
 
 ## 🔥 4. Engineering Challenges & Solutions
 
-### ✅ **Challenge 1: 이종 데이터 통합 및 환각(Hallucination) 제어**
-*   **Problem**: 비정형 뉴스 데이터와 정형 수치 데이터를 결합할 때 LLM이 수치를 왜곡할 위험성 존재.
-*   **Solution**: **'Two-Step Prompting'** 전략 도입. Gemini 2.0 Flash가 데이터 무결성을 먼저 검증하고, 규격화된 Markdown Context를 생성하여 1.5 Pro의 판단 정밀도 향상.
+### ✅ 토큰 매니징 및 API 최적화 (v0.1.0 해결)
+- **Problem**: 24시간마다 만료되는 증권사 토큰과 빈번한 API 호출로 인한 서버 부하.
+- **Solution**: 로컬 파일 시스템을 활용한 **Token Caching 전략**을 수립하여 유효성 검증 후 필요 시에만 재발급받도록 구현.
 
-### ✅ **Challenge 2: 비용 효율적인 서버리스 파이프라인 설계**
-*   **Problem**: 유료 API(Perplexity) 및 고정 서버 비용 발생 부담.
-*   **Solution**: **GAS(Google Apps Script)**와 **GitHub Actions**의 크론(Cron) 기능을 조합하여 인프라 비용 0원의 ETL 및 스케줄링 파이프라인 구축.
-
-### ✅ **Challenge 3: 안정적인 API 인증 및 Rate Limit 관리**
-*   **Problem**: 24시간 후 만료되는 OAuth 2.0 토큰 및 증권사 API의 초당 호출 제한 대응 필요.
-*   **Solution**: 토큰 자동 갱신 로직 및 요청 간 동적 딜레이를 관리하는 **Request Scheduler** 모듈 구현.
+### ✅ 'AI Captain' 분석 로직의 신뢰성 확보
+- **Problem**: LLM의 환각 현상(Hallucination)으로 인한 잘못된 수치 판단 위험.
+- **Solution**: 데이터 소스를 **Macro(Perplexity)**와 **Micro(KIS API)**로 엄격히 분리하고, 최종 판단 전 Gemini 2.0 Flash를 활용한 교차 검증 파이프라인 설계.
 
 ---
 
 ## 👨‍💻 5. Developer's Note
 이 프로젝트는 기술적 구현을 넘어 **'데이터가 어떻게 비즈니스적 가치(Profit)를 창출하는가'**에 대한 고찰을 담고 있습니다. 모든 코드는 유지보수성과 확장성을 고려하여 클린 코드 원칙을 준수합니다.
+
+---
+
+## 📂 6. Directory Structure
+```text
+.
+├── src/
+│   ├── auth.py         # KIS API 인증 및 토큰 관리
+│   └── discord_bot.py  # 디스코드 알림 및 Embed 포맷팅
+├── data/               # 토큰 및 로컬 캐시 데이터 (Git 제외)
+├── .env                # API 키 및 보안 환경 변수
+├── .gitignore          # 보안 파일 및 가상환경 제외 설정
+└── requirements.txt    # 프로젝트 의존성 관리
