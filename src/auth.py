@@ -10,13 +10,13 @@ load_dotenv()
 
 class KISAuth:
     def __init__(self, mode="mock"):
+        base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.token_file = os.path.join(base_path, "data", f"token_{mode}.json")
+        os.makedirs(os.path.join(base_path, "data"), exist_ok=True)
         self.mode = mode
         self.base_url = os.getenv("KIS_URL") if mode == "real" else os.getenv("KIS_MOCK_URL")
         self.app_key = os.getenv("KIS_APP_KEY") if mode == "real" else os.getenv("KIS_MOCK_APP_KEY")
         self.app_secret = os.getenv("KIS_APP_SECRET") if mode == "real" else os.getenv("KIS_MOCK_APP_SECRET")
-
-        # 토큰을 저장할 파일 경로
-        self.token_file = "data/token.json" if mode == "real" else "data/token_mock.json"
 
     def _save_token(self, token_data):
         # 새로 받은 토큰 데이터를 파일로 저장(현재시간 + 만료시간을 더해 절대 시각으로 저장)

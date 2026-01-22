@@ -1,5 +1,6 @@
 import os
 import gspread
+import datetime
 from google.oauth2.service_account import Credentials
 from dotenv import load_dotenv
 
@@ -32,8 +33,19 @@ class GSheetManager:
     def get_all_data(self):
         return self.sheet.get_all_records()
     
+    def append_research(self, stock_name, content):
+        # main.py에서 호출하는 결과 저장 함수
+        try:
+            now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            self.sheet.append_row([now, stock_name, str(content)])
+            print(f"✅ 구글 시트 기록 완료: {stock_name}")
+        except Exception as e:
+            print(f"❌ 시트 기록 실패: {e}")
+    
 if __name__ == "__main__":
     # 테스트 실행
     manager = GSheetManager()
+    
+    # 1. 조회 테스트
     data = manager.get_all_data()
     print(f"현재 시트 데이터: {data}")

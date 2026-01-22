@@ -4,7 +4,7 @@ import json
 from dotenv import load_dotenv
 from datetime import datetime
 import pytz
-from config import SECTOR_CONFIGS, STOCK_DB, BRIEFING_TEMPLATES
+from src.config import SECTOR_CONFIGS, STOCK_DB, BRIEFING_TEMPLATES
 
 
 load_dotenv()
@@ -20,8 +20,12 @@ class PerplexityResearcher:
     def _generate_prompt(self, type, ticker=None):
         # 설정파일을 기반으로 프롬프트 조립하는 함수
         # 한국 시간 구하기
-        korea_tz = pytz.timezone('Asia/Seoul')
-        now = datetime.now(korea_tz)
+        try:
+            korea_tz = pytz.timezone('Asia/Seoul')
+            now = datetime.now(korea_tz)
+        except:
+            now = datetime.now()
+
         current_date = now.strftime("%Y년 %m월 %d일 %H시 %M분") # 예: 2026년 1월 22일 09시 00분
 
         if type == "morning_market":
@@ -30,14 +34,18 @@ class PerplexityResearcher:
         
         elif type == "specific_stock" and ticker:
             stock = STOCK_DB.get(ticker)
+            if not stock: return None
+
             sector = SECTOR_CONFIGS.get(stock['sector'])
+            
             return BRIEFING_TEMPLATES["specific_stock"].format(
                 name = stock["name"],
                 ticker=ticker,
                 peers=sector['global_peer'],
                 pipeline=stock['key_pipeline'],
                 specific_queries=" / ".join(stock['specific_queries']),
-                datetime=current_date)
+                datetime=current_date
+            )
             
         
         elif type == "evening_review" and ticker:
@@ -69,13 +77,19 @@ class PerplexityResearcher:
                 headers={
                     "Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"},
                 json=data,
-                timeout=45
+                timeout=60
             )
 
             if response.status_code == 200:
-                res_json = response.json()
-                # 초큰 추적, 이후에 TokenTracker와 연동
-                return res_json['choices'][0]['message']['content']
+                result = response.json()['choices'][0]['message']['content']
+
+                if result.startswith("```json"):
+                    result = result.replace("```json", "").replace("```", "").strip()
+                elif result.startswith("```"):
+                    result = result.replace("```", "").strip()
+
+                return result
+
             return f"❌ API Error: {response.status_code} - {response.text}"
         except Exception as e:
             return f"❌ Request Error: {str(e)}"

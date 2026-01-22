@@ -14,12 +14,22 @@ class DiscordBot:
         # 디스코드 웹훅 URL 로드
         self.webhook_url = os.getenv("DISCORD_WEBHOOK_URL")
 
+        if not self.webhook_url:
+            print("⚠️ 경고: .env파일의 DISCORD_WEBHOOK_URL 점검요망")
+
     def send_text(self, message):
         # 기본적인 텍스트 메시지 전송
+        if not self.webhook_url: return 400
+
         payload = {"content": message}
-        response = requests.post(self.webhook_url, json=payload)
-        return response.status_code
-    
+
+        try:
+            response = requests.post(self.webhook_url, json=payload)
+            return response.status_code
+        except Exception as e:
+            print(f"❌ 디스코드 텍스트 전송 중 에러: {e}")
+            return 500
+        
     def send_embed(self, title, description, fields=None, color=0x00ff00):
         """
         전문가용 'Embed' 카드 메시지 전송
@@ -28,12 +38,16 @@ class DiscordBot:
         - fields: [{name: "제목", value: "내용", inline: True}] 형태의 리스트
         - color : 왼쪽 바의 색상 (기본 초록색)
         """
+        if not self.webhook_url: return 400
+
+        timestamp = datetime.utcnow().isoformat()
+
         # 디스코드가 요구하는 Embed 규격에 맞춰 데이터 구성
         embed = {
             "title": title,
             "description": description,
             "color": color,
-            "timestamp": datetime.utcnot().isoformat(), # 메시지 발생 시각
+            "timestamp": timestamp, # 메시지 발생 시각
             "footer": {"text": "LQSP Trading System"}
         }
 
@@ -45,13 +59,19 @@ class DiscordBot:
             "embeds": [embed]
         }
 
-        response = requests.post(self.webhook_url, json=payload)
+        try:
+            response = requests.post(self.webhook_url, json=payload)
 
-        if response.status_code == 204:
-            print("✅ 디스코드 알림 전송 완료!")
-        else:
+            if response.status_code == 204:
+                print("✅ 디스코드 알림 전송 완료!")
+            else:
+                print(f"❌ 전송 실패: {response.status_code}, {response.text}")
+            return response.status_code
+        
+        except Exception as e:
             print(f"❌ 전송 실패: {response.status_code}, {response.text}")
-
+            return 500
+        
 if __name__ == "__main__":
     # 테스트 실행
     bot = DiscordBot()
