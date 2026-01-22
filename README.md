@@ -1,78 +1,113 @@
 # 📈 LLM-Quant Strategy Pipeline (LQSP)
 
-> **"지능형 에이전트 기반의 데이터 통합 및 투자 전략 수립 자동화 파이프라인"**
+> **"지능형 에이전트(AI Captain) 기반의 데이터 통합 및 투자 전략 수립 자동화 파이프라인"**
 
-본 프로젝트는 불확실성이 높은 금융 시장에서 개인 투자자의 감정적 편향을 배제하고, **LLM(Gemini 1.5 Pro)의 전략적 추론**과 **증권사 REST API의 정량 데이터**를 결합하여 수익을 창출하는 **Semi-Auto Trading 인프라**를 구축합니다.
-
----
-
-## 🏛 1. System Architecture
-
-본 시스템은 정성적 데이터(뉴스/리포트)와 정량적 데이터(시세/수급)를 상호 보완적으로 결합하는 **Decoupled Data Pipeline** 구조를 채택하였습니다.
-
-### **[Data Flow]**
-1.  **Research**: Perplexity Pro (Web) → Email Automation → **Gmail API/GAS** → **Google Sheets** (Data Lake).
-2.  **Market Data**: **KIS REST API** (실시간 시세, 수급, 이평선) → Python Backend.
-3.  **Core Engine**:
-    *   **Gemini 2.0 Flash**: 이종 데이터 병합 및 데이터 정규화 (Context Builder).
-    *   **Gemini 1.5 Pro**: 리스크 관리 프로토콜에 따른 최종 투자 전략 수립 (Strategist).
-4.  **Communication**: **Discord Webhook/Bot**을 통한 인터랙티브 매매 시나리오 전송.
+본 프로젝트는 금융 시장의 감정적 편향을 제거하기 위해 **LLM(Gemini 1.5 Pro)**의 전략적 사고와 **증권사/AI API의 정밀 데이터**를 결합하여 수익을 창출하는 **Semi-Auto Trading 인프라**입니다.
 
 ---
 
-## 🛠 2. Tech Stack & Tools
+### 🏗 1. System Architecture (Data Flow 수정)
+
+1. **Macro Analysis**: Perplexity API → Python → Google Sheets.
+2. **Micro Analysis**: KIS REST API → Python.
+3. **Strategy Engine**: Gemini 1.5 Pro (Context-aware reasoning).
+4. **Interface (The Front-end)**: **Discord**
+    - **Push**: AI Captain의 전략 및 긴급 알림을 사용자에게 전달.
+    - **Interactive**: 사용자가 전략 확인 후 디스코드로 '승인' 명령 전달 시 최종 매매 프로세스 진행.
+
+---
+
+### 🛠 2. Tech Stack & Tools
 
 ### **Backend & APIs**
 - **Language**: Python 3.10+
-- **Finance API**: 한국투자증권 KIS Developers (REST API, WebSocket, OAuth 2.0)
-- **AI Models**: Gemini 1.5 Pro (Strategy), Gemini 2.0 Flash (Processing)
-- **Research**: Perplexity Pro (Web-based Research)
+- **Finance API**: 한국투자증권 KIS Developers (REST API, WebSocket)
+- **AI Models**: Gemini 1.5 Pro (Strategy Engine), Gemini 2.0 Flash (Data Preprocessing), Perplexity API (Real-time Research)
+
+### **Interface & Communication (핵심)**
+- **Discord Webhook**: 장전/장후 브리핑 및 실시간 긴급 알림 전송용.
+- **Discord Bot API (discord.py)**: AI Captain과의 실시간 양방향 질의응답 및 매매 승인 인터페이스.
 
 ### **Infrastructure & DevOps**
-- **Automation**: **GitHub Actions** (Scheduled Task Runner)
-- **Data Bridge**: **Google Apps Script (GAS)** (Email-to-Sheet ETL)
-- **Database**: **Google Sheets** (Lightweight Data Lake)
-- **Communication**: **Discord API** (Notification & Interactive Bot)
+- **Automation**: GitHub Actions (Scheduled Task Runner)
+- **Database**: Google Sheets (Data Lake), Local JSON (State/Token Management)
+- **Secret Management**: Python-dotenv (.env)
 
 ---
 
-## 📌 3. Project Roadmap & Milestones
+## 📌 3. Operational Schedule (KST)
 
-### 🟢 v0.1.0: Foundation (Current)
-- 프로젝트 인프라 구축 및 보안 설정 (.env, .gitignore).
-- 한국투자증권(KIS) OAuth 2.0 인증 및 토큰 매니저 개발.
-- Discord Webhook 연동 기초.
+AI Captain은 시장의 변곡점에 맞춰 하루 5회의 정기 브리핑 및 실시간 긴급 감시를 수행합니다.
 
-### 🟡 v0.2.0: Research ETL Pipeline
-- GAS(Google Apps Script) 기반 Perplexity 리서치 데이터 자동 파싱.
-- Google Sheets API를 활용한 데이터 적재 시스템.
+- **08:45 [Market Open Readiness]**: 글로벌 증시 브리핑 및 당일 타겟 종목 집중 리서치.
+- **10:00 [Morning Trend Scan]**: 개장 후 1시간 추세 및 초기 수급 확인, 전략 확정.
+- **13:30 [Mid-day Strategy]**: 오후장 방향성 체크 및 포지션 유지 여부 판단.
+- **15:20 [Closing Decision]**: 종가 매매 여부 결정 및 내일 대응 시나리오 수립.
+- **16:30 [Daily Review]**: 당일 매매 복기 및 'State JSON' 업데이트(Context 요약).
+- **REAL-TIME [Emergency]**: 3분 내 2% 이상 변동, 5분 평균 대비 5배 거래량 폭증, 손절가(SL) 터치 시 즉각 대응.
+
+---
+
+## 🚀 4. Project Roadmap & Milestones
+
+### ✅ v0.1.0: Foundation (Completed)
+- [x] KIS API 인증 모듈(`auth.py`) 및 토큰 캐싱 로직 구현.
+- [x] Discord 알림 엔진(`discord_bot.py`) 및 Embed 레이아웃 구축.
+
+### 🟡 v0.2.0: Advanced Data Pipeline (Current)
+- [x] Perplexity API 기반 리서치 자동화 (`researcher.py`).
+- [x] AI 주도 섹터 및 종목 발굴 엔진 (`scanner.py`).
+- [ ] Google Sheets 권한 재설정 및 데이터 로깅 최적화.
+- [ ] **Market Data 모듈**: 체결강도 및 호가 데이터 추출 로직 구현.
 
 ### 🟠 v0.3.0: Intelligence Strategy Engine
-- Gemini 1.5 Pro 기반 투자 시나리오 생성 프롬프트 엔지니어링.
-- KIS REST API 기반 기술적 지표(이평선, RSI 등) 계산 모듈 구축.
+- [ ] **Captain Engine**: Gemini 1.5 Pro 연동 및 `chat_history` 관리자 구축.
+- [ ] **State Manager**: 누적 투자 데이터 요약 및 기억 유지 로직 개발.
 
-### 🔴 v0.4.0: Tactical Real-time Mode
-- **WebSocket 연동**: 실시간 호가 및 체결 데이터 스트리밍 처리.
-- **Interactive Discord Bot**: 실시간 상황에 대한 LLM 즉각 질의응답 기능 추가.
-- **Event-Driven Alert**: 급등락 발생 시 긴급 리스크 관리 전략 자동 전송.
-
----
-
-## 🔥 4. Engineering Challenges & Solutions
-
-### ✅ **Challenge 1: 이종 데이터 통합 및 환각(Hallucination) 제어**
-*   **Problem**: 비정형 뉴스 데이터와 정형 수치 데이터를 결합할 때 LLM이 수치를 왜곡할 위험성 존재.
-*   **Solution**: **'Two-Step Prompting'** 전략 도입. Gemini 2.0 Flash가 데이터 무결성을 먼저 검증하고, 규격화된 Markdown Context를 생성하여 1.5 Pro의 판단 정밀도 향상.
-
-### ✅ **Challenge 2: 비용 효율적인 서버리스 파이프라인 설계**
-*   **Problem**: 유료 API(Perplexity) 및 고정 서버 비용 발생 부담.
-*   **Solution**: **GAS(Google Apps Script)**와 **GitHub Actions**의 크론(Cron) 기능을 조합하여 인프라 비용 0원의 ETL 및 스케줄링 파이프라인 구축.
-
-### ✅ **Challenge 3: 안정적인 API 인증 및 Rate Limit 관리**
-*   **Problem**: 24시간 후 만료되는 OAuth 2.0 토큰 및 증권사 API의 초당 호출 제한 대응 필요.
-*   **Solution**: 토큰 자동 갱신 로직 및 요청 간 동적 딜레이를 관리하는 **Request Scheduler** 모듈 구현.
+### 🔴 v0.4.0: Tactical Real-time Mode & Interactive Bot
+- [ ] **Async Monitoring**: `asyncio` 기반 실시간 시세 감시 시스템.
+- [ ] **Interactive Discord Bot**: 
+    - 단순 Webhook을 넘어 **상시 대기형 봇(Bot)**으로 업그레이드.
+    - AI Captain에게 "현재 한올바이오파마 상황 어때?"라고 질문 시 즉각 답변하는 기능.
+    - 버튼(Button)이나 선택 메뉴(Select Menu)를 통한 **매매 최종 승인 인터페이스** 구현.
 
 ---
 
-## 👨‍💻 5. Developer's Note
-이 프로젝트는 기술적 구현을 넘어 **'데이터가 어떻게 비즈니스적 가치(Profit)를 창출하는가'**에 대한 고찰을 담고 있습니다. 모든 코드는 유지보수성과 확장성을 고려하여 클린 코드 원칙을 준수합니다.
+## 🔥 5. Engineering Challenges & Solutions
+
+### ✅ **[Issue #1] 데이터 수집 아키텍처 최적화**
+*   **Problem**: Email-GAS 방식의 정보 누락 및 낮은 정보 밀도.
+*   **Solution**: **Perplexity API** 직접 연동으로 전환하여 Full-text 리서치 데이터 확보 및 시스템 단순화.
+
+### ✅ **[Issue #2] 토큰 및 보안 관리**
+*   **Problem**: 인증 토큰 만료 처리 및 보안 키 유출 위험.
+*   **Solution**: 로컬 파일 시스템 기반 토큰 캐싱 및 `.gitignore`를 통한 엄격한 보안 관리 적용.
+
+### ⚠️ **[Issue #3] 투자 연속성을 위한 Context 유지 전략**
+*   **Problem**: LLM API의 Stateless 특성으로 인한 이전 전략 망각.
+*   **Solution**: 매일 장 마감 후 핵심 데이터를 요약하여 `State JSON`에 보관하고, 이를 다음 날 프롬프트의 **'기초 기억'**으로 주입하는 프로세스 설계.
+
+### ⚠️ **[Issue #4] 실시간 감시 시스템의 효율적 구현**
+*   **Problem**: 일반 While 루프 사용 시 발생하는 Blocking 현상 및 리소스 낭비.
+*   **Solution**: `asyncio` 또는 멀티스레딩 기반의 비동기 아키텍처를 도입하여 메인 파이프라인과 실시간 감시 엔진을 분리할 예정.
+
+---
+
+## 📂 6. Directory Structure
+```text
+.
+├── src/
+│   ├── auth.py          # KIS API 인증 및 토큰 매니저
+│   ├── discord_bot.py   # 디스코드 알림 및 Embed 포맷팅
+│   ├── gsheet_manager.py # Google Sheets 데이터 로깅/로드
+│   ├── researcher.py     # Perplexity API 리서치 엔진
+│   ├── scanner.py        # 주도 섹터 및 종목 발굴 모듈
+│   ├── market_data.py    # KIS 시세/수급 데이터 수집 (v0.2.0)
+│   └── captain_engine.py # Gemini 1.5 Pro 전략 수립 엔진 (v0.3.0)
+├── data/                # 토큰, 채팅 이력, 상태 JSON (Git 제외)
+├── google_key.json      # Google Cloud 서비스 계정 키 (Git 제외)
+├── .env                 # API 키 및 계좌 환경 변수
+└── .gitignore           # 보안 및 가상환경 제외 설정
+```
+
+---
