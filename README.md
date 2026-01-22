@@ -1,5 +1,3 @@
----
-
 # 📈 LLM-Quant Strategy Pipeline (LQSP)
 
 > **"지능형 에이전트(AI Captain) 기반의 데이터 통합 및 투자 전략 수립 자동화 파이프라인"**
