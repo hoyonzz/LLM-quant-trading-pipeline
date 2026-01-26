@@ -2,6 +2,8 @@ import os
 from google import genai
 from dotenv import load_dotenv
 from src.context_manager import ContextManager
+from src.config import AI_MODELS
+import time
 
 
 load_dotenv()
@@ -19,7 +21,10 @@ class AICaptainEngine:
         
         self.client = genai.Client(api_key=self.api_key)
 
-        self.model_name = 'gemini-2.5-pro'
+        self.primary_model = AI_MODELS["captain"]
+        self.fallback_model = AI_MODELS["captain_fallback"]
+
+
 
         # AI의 정체성을 시스템 프롬프트로 고정
         self.system_persona = """
@@ -62,16 +67,27 @@ class AICaptainEngine:
 
         try:
             response = self.client.models.generate_content(
-                model=self.model_name,
+                model=self.primary_model,
                 contents=history + [current_message]
             )
             strategy_result = response.text
 
+        except Exception as e:
+            print(f"⚠️ Primary Model 실패: {e}")
+            try:
+                time.sleep(2)
+                response = self.client.models.generate_content(
+                    model=self.fallback_model,
+                    contents = history + [current_message]
+                )
+                strategy_result = response.text
+            except Exception as e2:
+                return f"❌ 모든 AI 모델 호출 실패: {str(e2)}"
 
-            # Step 4: 기억 업데이트
+
+        # Step 4: 기억 업데이트
+        if strategy_result:
             self.ctx_manager.add_message("user", input_data)
             self.ctx_manager.add_message("model", strategy_result)
 
-            return strategy_result
-        except Exception as e:
-            return f"❌ Gemini API 오류 발생: {str(e)}"
+        return strategy_result

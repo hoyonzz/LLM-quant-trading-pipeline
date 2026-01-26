@@ -1,7 +1,7 @@
 import os
 import requests
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from dotenv import load_dotenv
 
 
@@ -31,16 +31,9 @@ class DiscordBot:
             return 500
         
     def send_embed(self, title, description, fields=None, color=0x00ff00):
-        """
-        전문가용 'Embed' 카드 메시지 전송
-        - title: 제목
-        - description: 내용
-        - fields: [{name: "제목", value: "내용", inline: True}] 형태의 리스트
-        - color : 왼쪽 바의 색상 (기본 초록색)
-        """
         if not self.webhook_url: return 400
 
-        timestamp = datetime.utcnow().isoformat()
+        timestamp = datetime.now(timezone.utc).isoformat()
 
         # 디스코드가 요구하는 Embed 규격에 맞춰 데이터 구성
         embed = {

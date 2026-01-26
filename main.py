@@ -59,7 +59,7 @@ def run_single_ticker(ticker, auth, bot, researcher, md_manager, ctx_manager, en
             ],
             color=color
         )
-        print("✅ [{stock_name}] 분석 완료.")
+        print(f"✅ [{stock_name}] 분석 완료.")
 
     except Exception as e:
         print(f"❗ [{stock_name}] 처리 중 에러 발생: {e}")

@@ -1,5 +1,12 @@
 # src/config.py
 
+AI_MODELS = {
+    "captain": "gemini-2.5-pro",  # [선장] 지휘관
+    "captain_fallback": "gemini-2.0-pro-exp-02-05",  # [비상] 선장 모델 실패 시 대타
+    "watcher": "gemini-2.0-flash",         # [감시자] 요약 및 전처리 (속도/가성비)
+    "research": "gemini-2.0-flash"         # [리서치] 단순 검색 보조
+}
+
 SECTOR_CONFIGS = {
     "제약/바이오": {
         "index": "NBI(나스닥 바이오 지수), NYSE Arca Pharmaceutical Index",
@@ -88,7 +95,7 @@ BRIEFING_TEMPLATES = {
             }},
             "risk_factors":"현재 시장에서 우려하는 리스크 요인(없으면 '특이사항 없음')",
             "market_sentiment_score": "0 (공포/매도) ~ 100 (환호/매수) 사이의 정성적 점수",
-            "summary_for_coptain": "AI Captain이 매매 판단을 내릴 수 있도록 3줄 요약"
+            "summary_for_Captain": "AI Captain이 매매 판단을 내릴 수 있도록 3줄 요약"
         }}
     """
  }

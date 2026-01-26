@@ -1,7 +1,13 @@
 import json
 import os
+from dotenv import load_dotenv
 from google import genai
 from datetime import datetime
+from src.config import AI_MODELS
+
+
+load_dotenv()
+
 
 
 class ContextManager:
@@ -9,11 +15,12 @@ class ContextManager:
         self.history_file = history_file
         self.portfolio_path = portfolio_file # 계좌 상태 파일 추가
         self.max_target_tokens = 50000
-        self.api_key = api_key
+        self.api_key = api_key or os.getenv("GEMINI_API_KEY")
 
         # 요약 기능 위해 API 설정
         if api_key:
             self.client = genai.Client(api_key=self.api_key)
+            self.model_summary = AI_MODELS["watcher"]
 
         # 데이터 로드
         self.history = self._load_json(self.history_file, default=[])
